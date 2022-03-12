@@ -5,33 +5,43 @@ These are the notes from a meeting with the frontend developer that describe wha
 
 ## API Endpoints
 #### Products
-- Index 
-- Show
-- Create [token required]
-- [OPTIONAL] Top 5 most popular products 
-- [OPTIONAL] Products by category (args: product category)
+- Index `/products [GET]`
+- Show `/products/{id} [GET]`
+- Create [token required] `/products [POST]`
+- [OPTIONAL] Top 5 most popular products `/products?limit=5&sort_by=popularity [GET]`
+- [OPTIONAL] Products by category (args: product category)  `/products&limit=5&offset=0&category={category} [POST]`
 
 #### Users
-- Index [token required]
-- Show [token required]
-- Create N[token required]
+- Index [token required] `/users [GET]`
+- Show [token required] `/users/{id} [GET]`
+- Create [token required] `/users [POST]`
 
 #### Orders
-- Current Order by user (args: user id)[token required]
-- [OPTIONAL] Completed Orders by user (args: user id)[token required]
+- Current Order by user (args: user id)[token required] `/user/{id}/current_orders [GET]`
+- [OPTIONAL] Completed Orders by user (args: user id)[token required] `/user/{id}/current_orders [GET]`
 
 ## Data Shapes
 #### Product
--  id
+- id
 - name
 - price
 - [OPTIONAL] category
+
+```
+Product (id:serial[primary key], name:text, price:decimal, category:bigint[foreign key to category table])
+Category (id:serial[primary key], name:text)
+```
 
 #### User
 - id
 - firstName
 - lastName
 - password
+- username
+
+```
+User (id: serial[primary key], firstname:text, lastname:text, password:text[not null], username:[not null])
+```
 
 #### Orders
 - id
@@ -40,3 +50,7 @@ These are the notes from a meeting with the frontend developer that describe wha
 - user_id
 - status of order (active or complete)
 
+```
+Order (id:serial[primary key], user_id:bigint[foreign key tp user table)
+Product_Order (produc_id:bigint[foreign key to product table], order_id:bitint[foreign key to order table], quantity:integer)
+```
