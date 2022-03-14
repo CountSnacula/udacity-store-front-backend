@@ -1,17 +1,18 @@
 import {Order, OrderStatus, OrderStore, ProductOrder} from "../../src/db/models/order";
 import {OrderHandler} from "../../src/db/handler/order-handler";
-import SpyObj = jasmine.SpyObj;
 import {Application, Request, Response} from "express";
+import {TokenService} from "../../src/db/service/token-service";
 import createSpyObj = jasmine.createSpyObj;
-import exp = require("constants");
+import SpyObj = jasmine.SpyObj;
 
 
 describe("Order Handler tests", () => {
     let underTest: OrderHandler;
     const orderSpy: SpyObj<OrderStore> = createSpyObj("OrderStore", ["findActive", "createOrder", "completeOrder"]);
+    const tokenSpy: SpyObj<TokenService> = createSpyObj("TokenService", ["validateToken"]);
 
     beforeEach(() => {
-        underTest = new OrderHandler(orderSpy);
+        underTest = new OrderHandler(orderSpy, tokenSpy);
 
     });
 

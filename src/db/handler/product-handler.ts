@@ -1,10 +1,14 @@
 import {Product, ProductStore} from "../models/product";
 import {Application, Request, Response} from "express";
+import {TokenService} from "../service/token-service";
 
 export class ProductHandler {
     private productStore: ProductStore;
-    constructor(productStore: ProductStore) {
+    private tokenService: TokenService;
+
+    constructor(productStore: ProductStore, tokenService: TokenService) {
         this.productStore = productStore;
+        this.tokenService = tokenService;
     }
 
     async index(request: Request, response: Response): Promise<void> {
@@ -55,6 +59,7 @@ export class ProductHandler {
     initRoutes(app: Application): void {
         app.get("/products", (req, resp) => this.index(req, resp));
         app.get("/products/:id", (req, resp) => this.show(req, resp));
-        app.post("/products", (req, resp) => this.create(req, resp));
+        app.post("/products", (req, res, next) => this.tokenService.validateToken(req, res, next),
+            (req, resp) => this.create(req, resp));
     }
 }

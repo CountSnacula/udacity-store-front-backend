@@ -6,15 +6,16 @@ import createSpyObj = jasmine.createSpyObj;
 import exp = require("constants");
 import {ProductHandler} from "../../src/db/handler/product-handler";
 import {Product, ProductStore} from "../../src/db/models/product";
+import {TokenService} from "../../src/db/service/token-service";
 
 
 describe("ProductHandler tests", () => {
     let underTest: ProductHandler;
     const productSpy: SpyObj<ProductStore> = createSpyObj("ProductStore", ["findAll", "findOne", "create"]);
+    const tokenSpy: SpyObj<TokenService> = createSpyObj("TokenService", ["validateToken"]);
 
     beforeEach(() => {
-        underTest = new ProductHandler(productSpy);
-
+        underTest = new ProductHandler(productSpy, tokenSpy);
     });
 
     it('should have been initialized', () => {

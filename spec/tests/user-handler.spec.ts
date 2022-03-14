@@ -3,15 +3,16 @@ import {UserHandler} from "../../src/db/handler/user-handler";
 import {User, UserStore} from "../../src/db/models/user";
 import createSpyObj = jasmine.createSpyObj;
 import SpyObj = jasmine.SpyObj;
+import {TokenService} from "../../src/db/service/token-service";
 
 
 describe("UserHandler tests", () => {
     let underTest: UserHandler;
     const userStore: SpyObj<UserStore> = createSpyObj("UserStore", ["findAll", "findOne", "create"]);
+    const tokenSpy: SpyObj<TokenService> = createSpyObj("TokenService", ["validateToken"]);
 
     beforeEach(() => {
-        underTest = new UserHandler(userStore);
-
+        underTest = new UserHandler(userStore, tokenSpy);
     });
 
     it('should have been initialized', () => {

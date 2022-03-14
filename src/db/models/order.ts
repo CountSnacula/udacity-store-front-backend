@@ -3,7 +3,7 @@ import {DbConnection} from "../connection/database";
 
 export enum OrderStatus {
     active = "active",
-    complete = "complete",
+    complete = "completed",
 }
 
 export type ProductOrder = {

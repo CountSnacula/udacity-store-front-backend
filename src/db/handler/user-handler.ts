@@ -1,11 +1,15 @@
 import {Product, ProductStore} from "../models/product";
 import {Application, Request, Response} from "express";
 import {User, UserStore} from "../models/user";
+import {TokenService} from "../service/token-service";
 
 export class UserHandler {
     private userStore: UserStore;
-    constructor(userStore: UserStore) {
+    private tokenService: TokenService;
+
+    constructor(userStore: UserStore, tokenService: TokenService) {
         this.userStore = userStore;
+        this.tokenService = tokenService;
     }
 
     async index(request: Request, response: Response): Promise<void> {
@@ -42,7 +46,7 @@ export class UserHandler {
         const firstName = request.body.firstName;
         try {
             const user: User = {
-                username,password,lastName,firstName
+                username, password, lastName, firstName
             }
             const created: User = await this.userStore.create(user);
             response.send(created);
@@ -53,8 +57,12 @@ export class UserHandler {
     }
 
     initRoutes(app: Application): void {
-        app.get("/users", (req, resp) => this.index(req, resp));
-        app.get("/users/:id", (req, resp) => this.show(req, resp));
-        app.post("/users", (req, resp) => this.create(req, resp));
+        app.get("/users",
+            (req, res, next) => this.tokenService.validateToken(req, res, next),
+            (req, resp) => this.index(req, resp));
+        app.get("/users/:id", (req, res, next) => this.tokenService.validateToken(req, res, next),
+            (req, resp) => this.show(req, resp));
+        app.post("/users", (req, res, next) => this.tokenService.validateToken(req, res, next),
+            (req, resp) => this.create(req, resp));
     }
 }

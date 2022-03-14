@@ -1,11 +1,15 @@
 import {Application, Request, Response} from "express";
 import {Order, OrderStore} from "../models/order";
+import {TokenService} from "../service/token-service";
 
 export class OrderHandler {
     private orderStore: OrderStore;
+    private tokenService: TokenService;
 
-    constructor(orderStore: OrderStore) {
+    constructor(orderStore: OrderStore,
+                tokenService: TokenService) {
         this.orderStore = orderStore;
+        this.tokenService = tokenService;
     }
 
     async create(req: Request, resp: Response) {
@@ -63,8 +67,14 @@ export class OrderHandler {
     }
 
     initRoutes(app: Application): void {
-        app.get("/users/:userId/orders/active", (req, resp) => this.getActive(req, resp));
-        app.put("/users/:userId/orders/:orderId", (req, resp) => this.complete(req, resp));
-        app.post("/users/:userId/orders", (req, resp) => this.create(req, resp));
+        app.get("/users/:userId/orders/active",
+            (req, res, next) => this.tokenService.validateToken(req, res, next),
+            (req, resp) => this.getActive(req, resp));
+        app.put("/users/:userId/orders/:orderId",
+            (req, res, next) => this.tokenService.validateToken(req, res, next),
+            (req, resp) => this.complete(req, resp));
+        app.post("/users/:userId/orders",
+            (req, res, next) => this.tokenService.validateToken(req, res, next),
+            (req, resp) => this.create(req, resp));
     }
 }

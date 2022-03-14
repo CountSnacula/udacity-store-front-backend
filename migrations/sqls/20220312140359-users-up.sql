@@ -4,6 +4,6 @@ CREATE TABLE IF NOT EXISTS users
     firstName VARCHAR,
     lastName  VARCHAR,
     password  VARCHAR NOT NULL,
-    username  VARCHAR NOT NULL,
+    username  VARCHAR NOT NULL UNIQUE,
     PRIMARY KEY (id)
 );
