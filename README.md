@@ -1,5 +1,208 @@
 # Storefront Backend Project
 
+## Instructions
+
+### Build
+Building the project use `npm run build` in the project root. The resulting js files will be located in the
+folder `dist`
+
+### Server
+
+#### Pre Requirement
+- Running postgres instance
+- valid .env file
+
+To start a postgres instance for this project run `docker-compose up -d` from the root directory in the project. This will download and start the latest docker postgres container on port `5432`.
+
+##### .env
+For all need variables needed for the .env-File see the example file `.example-env`. This will configure both the node both the app and the docker container.
+
+##### stating
+run `npm install` from the project root directory to install all dependencies. Afterwards run `db-migrate up` this will setup the local PostgresQL server.  
+The migration script contain initial data for `user`, `products` and `orders`.
+
+To start the service either:
+
+* build the project and run `node build/index.js`
+* `npm run start`
+
+Both options will start an express server which will listen on port 3000.
+
+
+### Endpoint
+For the endpoint see the example [insomnia](https://insomnia.rest/) request collection `store-front-insomnia.json` or the HTTP archive format `store-front-insomnia.har`
+
+#### login
+Methode: POST
+URL: `localhost:3000/login`
+Body: 
+```json
+{
+	"username": "username",
+	"password": "password"
+}
+```
+example:
+```bash
+curl --request POST \
+  --url http://localhost:3000/login \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"username": "username",
+	"password": "password"
+}'
+```
+
+#### products
+##### Get all products
+Methode: GET
+URL: `localhost:3000/products`
+example:
+```bash
+curl --request GET \
+  --url http://localhost:3000/products
+```
+
+##### Get single product
+Methode: GET
+URL: `localhost:3000/products/:id`
+example:
+```bash
+curl --request GET \
+  --url http://localhost:3000/products/1
+```
+
+##### create product
+Methode: POST
+URL: `localhost:3000/products`
+Body: 
+```json
+{
+		"category": "category",
+		"price": 50,
+		"name": "name"
+}
+```
+Headers: `Authorization: Bearer: authoken from login response`
+example:
+```bash
+curl --request POST \
+  --url http://localhost:3000/products \
+  --header 'Authorization: Bearer: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjozLCJmaXJzdG5hbWUiOiJmaXJzdE5hbWUiLCJsYXN0bmFtZSI6Imxhc3ROYW1lIiwidXNlcm5hbWUiOiJ1c2VybmFtZSJ9LCJpYXQiOjE2NDcyNzcwOTZ9.5W1QIy5E7krNDg8djDt3tMSkjE7PZIX8t51zPjgSR-c' \
+  --header 'Content-Type: application/json' \
+  --data '{
+		"category": "category",
+		"price": 50,
+		"name": "name"
+}'
+```
+
+#### user
+##### Get all users
+Methode: GET
+URL: `localhost:3000/users`
+Headers: `Authorization: Bearer: authoken from login response`
+example:
+```bash
+curl --request GET \
+  --url http://localhost:3000/users \
+  --header 'Authorization: Bearer: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjozLCJmaXJzdG5hbWUiOiJmaXJzdE5hbWUiLCJsYXN0bmFtZSI6Imxhc3ROYW1lIiwidXNlcm5hbWUiOiJ1c2VybmFtZSJ9LCJpYXQiOjE2NDcyNzcwOTZ9.5W1QIy5E7krNDg8djDt3tMSkjE7PZIX8t51zPjgSR-c'
+```
+
+##### Get single user
+Methode: GET
+URL: `localhost:3000/users/:id`
+Headers: `Authorization: Bearer: authoken from login response`
+example:
+```bash
+curl --request GET \
+  --url http://localhost:3000/users/1 \
+  --header 'Authorization: Bearer: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjozLCJmaXJzdG5hbWUiOiJmaXJzdE5hbWUiLCJsYXN0bmFtZSI6Imxhc3ROYW1lIiwidXNlcm5hbWUiOiJ1c2VybmFtZSJ9LCJpYXQiOjE2NDcyNzcwOTZ9.5W1QIy5E7krNDg8djDt3tMSkjE7PZIX8t51zPjgSR-c'
+```
+
+##### create user
+Methode: POST
+URL: `localhost:3000/users`
+Headers: `Authorization: Bearer: authoken from login response`
+Body:
+```json
+{
+  "firstName": "firstName",
+  "lastName": "lastName",
+  "username": "username",
+  "password": "password"
+}
+```
+example:
+```bash
+curl --request POST \
+  --url http://localhost:3000/users \
+  --header 'Authorization: Bearer: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjozLCJmaXJzdG5hbWUiOiJmaXJzdE5hbWUiLCJsYXN0bmFtZSI6Imxhc3ROYW1lIiwidXNlcm5hbWUiOiJ1c2VybmFtZSJ9LCJpYXQiOjE2NDcyNzcwOTZ9.5W1QIy5E7krNDg8djDt3tMSkjE7PZIX8t51zPjgSR-c' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"firstName": "firstName",
+	"lastName": "lastName",
+	"username": "username",
+	"password": "password"
+}'
+```
+
+#### Order
+##### get active order
+Methode: GET
+URL: `localhost:3000/users/1/orders/active`
+Headers: `Authorization: Bearer: authoken from login response`
+example:
+```bash
+curl --request GET \
+  --url http://localhost:3000/users/1/orders/active \
+  --header 'Authorization: Bearer: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjozLCJmaXJzdG5hbWUiOiJmaXJzdE5hbWUiLCJsYXN0bmFtZSI6Imxhc3ROYW1lIiwidXNlcm5hbWUiOiJ1c2VybmFtZSJ9LCJpYXQiOjE2NDcyNzcwOTZ9.5W1QIy5E7krNDg8djDt3tMSkjE7PZIX8t51zPjgSR-c'
+```
+
+##### complete active order
+Methode: PUT
+URL: `localhost:3000/users/1/orders/1`
+Headers: `Authorization: Bearer: authoken from login response`
+example:
+```bash
+curl --request PUT \
+  --url http://localhost:3000/users/1/orders/1 \
+  --header 'Authorization: Bearer: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjozLCJmaXJzdG5hbWUiOiJmaXJzdE5hbWUiLCJsYXN0bmFtZSI6Imxhc3ROYW1lIiwidXNlcm5hbWUiOiJ1c2VybmFtZSJ9LCJpYXQiOjE2NDcyNzcwOTZ9.5W1QIy5E7krNDg8djDt3tMSkjE7PZIX8t51zPjgSR-c'
+```
+
+##### create new order
+Methode: POST
+URL: `localhost:3000/users/1/orders`
+Headers: `Authorization: Bearer: authoken from login response`
+Body:
+```json
+{
+	"products": [
+		{
+			"productId": 1,
+			"quantity": 5
+		}
+	],
+	"status": "active"
+}
+```
+example:
+```bash
+curl --request POST \
+  --url http://localhost:3000/users/1/orders \
+  --header 'Authorization: Bearer: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjozLCJmaXJzdG5hbWUiOiJmaXJzdE5hbWUiLCJsYXN0bmFtZSI6Imxhc3ROYW1lIiwidXNlcm5hbWUiOiJ1c2VybmFtZSJ9LCJpYXQiOjE2NDcyNzcwOTZ9.5W1QIy5E7krNDg8djDt3tMSkjE7PZIX8t51zPjgSR-c' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"products": [
+		{
+			"productId": 1,
+			"quantity": 5
+		}
+	],
+	"status": "active"
+}'
+```
+
 ## Getting Started
 
 This repo contains a basic Node and Express app to get you started in constructing an API. To get started, clone this repo and run `yarn` in your terminal at the project root.
