@@ -1,6 +1,4 @@
-import {Product, ProductStore} from "../models/product";
 import {Application, Request, Response} from "express";
-import {User, UserStore} from "../models/user";
 import {Order, OrderStore} from "../models/order";
 
 export class OrderHandler {
