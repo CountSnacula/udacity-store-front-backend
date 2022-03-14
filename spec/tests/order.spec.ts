@@ -45,7 +45,7 @@ describe("Order Store tests", () => {
         }
         // @ts-ignore
         poolClientSpy.query.and.returnValue(Promise.resolve(queryResult));
-        const actual = await underTest.createOrder(order);
+        const actual = await underTest.createOrder(order, userId);
         expect(actual).toBe(order);
         expect(poolClientSpy.release).toHaveBeenCalled();
         // @ts-ignore
@@ -55,19 +55,18 @@ describe("Order Store tests", () => {
     it('should complete an active order', async () => {
         const expectedQuery = "UPDATE orders\n" +
             "                               SET status= 'complete'\n" +
-            "                               WHERE id = 1\n" +
+            "                               WHERE id = 1 AND user_id = 2\n" +
             "                               RETURNING id, user_id as userId, status";
         const id = 1;
+        const userId = 2;
         const products: ProductOrder[] = [{
             productId: 2,
             quantity: 5,
         }];
-        const userId = 3;
         const status: OrderStatus = OrderStatus.active;
         const order: Order = {
             id,
             products,
-            userId,
             status
         };
 
@@ -77,7 +76,7 @@ describe("Order Store tests", () => {
         }
         // @ts-ignore
         poolClientSpy.query.and.returnValue(Promise.resolve(queryResult));
-        const actual = await underTest.completeOrder(id);
+        const actual = await underTest.completeOrder(userId, id);
         expect(actual).toBe(order);
         expect(poolClientSpy.release).toHaveBeenCalled();
         // @ts-ignore

@@ -24,13 +24,12 @@ describe("Product Store tests", () => {
         const expectedQuery = "SELECT id, name, price, category\n" +
             "                     FROM products\n" +
             "                     WHERE id = 1";
-        const p: Product =
-            {
-                id: 1,
-                category: "category",
-                price: 50,
-                name: "name"
-            };
+        const p: Product = {
+            id: 1,
+            category: "category",
+            price: 50,
+            name: "name"
+        };
         const queryResult: QueryResult<Product> = {
             command: "", fields: [], oid: 0, rowCount: 1,
             rows: [p]

@@ -17,8 +17,9 @@ These are the notes from a meeting with the frontend developer that describe wha
 - Create [token required] `/users [POST]`
 
 #### Orders
-- Current Order by user (args: user id)[token required] `/user/{id}/current_orders [GET]`
-- [OPTIONAL] Completed Orders by user (args: user id)[token required] `/user/{id}/current_orders [GET]`
+- Current Order by user (args: user id)[token required] `/user/{id}/orders [GET]`
+- [OPTIONAL] Completed Orders by user (args: user id)[token required] `/user/{userId}/orders/:orderId [PUT]`
+- [self made] create order for a user (args: user id)[token required] `/user/{userId}/orders [POST]`
 
 ## Data Shapes
 #### Product

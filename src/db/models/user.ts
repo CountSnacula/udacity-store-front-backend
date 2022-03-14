@@ -64,9 +64,9 @@ export class UserStore {
             // @ts-ignore
             const pwHash = bcrypt.hashSync(userToCreate.password + BCRYPT_PASSWORD, parseInt(SALT_ROUNDS))
             const sql = `INSERT INTO users(firstname, lastname, password, username)
-                         VALUES (?, ?, ?, ?)
+                         VALUES ('${userToCreate.firstName}', '${userToCreate.lastName}', '${pwHash}', '${userToCreate.username}')
                          RETURNING id, firstname, lastname, username`;
-            const result = await connection.query(sql, [userToCreate.firstName, userToCreate.lastName, pwHash, userToCreate.username]);
+            const result = await connection.query(sql);
             connection.release();
             return result.rows[0];
         } catch (e) {

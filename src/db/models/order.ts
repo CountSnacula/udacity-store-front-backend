@@ -13,9 +13,9 @@ export type ProductOrder = {
 
 export type Order = {
     id?: number,
-    userId: number,
     status: OrderStatus,
     products?: ProductOrder[],
+    userId?: number
 }
 
 export class OrderStore {
@@ -24,12 +24,12 @@ export class OrderStore {
         this.client = client;
     }
 
-    async createOrder(order: Order): Promise<Order> {
+    async createOrder(order: Order, userId: number): Promise<Order> {
         try {
             const con = await this.client.connect();
-            await this.completeAllOpenOrders(con, order.userId);
+            await this.completeAllOpenOrders(con, userId);
             const insertOrder = `INSERT INTO orders (user_id, status)
-                                 VALUES (${order.userId}, '${OrderStatus.active}')
+                                 VALUES (${userId}, '${OrderStatus.active}')
                                  RETURNING id, user_id as userId, status`;
             const insertOrderResult = await con.query(insertOrder);
             const created = insertOrderResult.rows[0];
@@ -43,12 +43,12 @@ export class OrderStore {
         }
     }
 
-    async completeOrder(orderId: number): Promise<Order> {
+    async completeOrder(userId: number, orderId: number): Promise<Order> {
         try {
             const con = await this.client.connect();
             const sql = `UPDATE orders
                                SET status= '${OrderStatus.complete}'
-                               WHERE id = ${orderId}
+                               WHERE id = ${orderId} AND user_id = ${userId}
                                RETURNING id, user_id as userId, status`;
 
             const updateResult = await con.query(sql);

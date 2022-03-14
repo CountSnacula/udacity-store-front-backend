@@ -82,10 +82,7 @@ describe("User Store tests", () => {
     });
 
     it("should create a user", async () => {
-        const expectedQuery = "INSERT INTO users(firstname, lastname, password, username)\n" +
-            "                         VALUES (?, ?, ?, ?)\n" +
-            "                         RETURNING id, firstname, lastname, username";
-        const password = "password";
+        const password = "userPassword";
         const firstName = "firstName";
         const lastName = "lastName";
         const username = "username";
@@ -100,12 +97,8 @@ describe("User Store tests", () => {
             rows: [userToCreate]
         }
         // @ts-ignore
-        poolClientSpy.query.and.callFake((actualQuery, parameters) => {
-            expect(actualQuery).toEqual(expectedQuery);
-            expect(parameters).toContain(username);
-            expect(parameters).toContain(firstName);
-            expect(parameters).toContain(lastName);
-            expect(parameters).not.toContain(password);
+        poolClientSpy.query.and.callFake((actualQuery) => {
+            expect(actualQuery).not.toContain(password);
             return Promise.resolve(queryResult);
         })
         const actual = await underTest.create(userToCreate);
