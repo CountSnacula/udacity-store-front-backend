@@ -1,4 +1,3 @@
-import {Product, ProductStore} from "../models/product";
 import {Application, Request, Response} from "express";
 import {User, UserStore} from "../models/user";
 import {TokenService} from "../service/token-service";
@@ -62,7 +61,7 @@ export class UserHandler {
             (req, resp) => this.index(req, resp));
         app.get("/users/:id", (req, res, next) => this.tokenService.validateToken(req, res, next),
             (req, resp) => this.show(req, resp));
-        app.post("/users", (req, res, next) => this.tokenService.validateToken(req, res, next),
+        app.post("/users",
             (req, resp) => this.create(req, resp));
     }
 }

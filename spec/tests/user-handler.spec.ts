@@ -4,15 +4,41 @@ import {User, UserStore} from "../../src/db/models/user";
 import createSpyObj = jasmine.createSpyObj;
 import SpyObj = jasmine.SpyObj;
 import {TokenService} from "../../src/db/service/token-service";
+import {ProductHandler} from "../../src/db/handler/product-handler";
+import {LoginHandler} from "../../src/db/handler/login-handler";
+import {OrderHandler} from "../../src/db/handler/order-handler";
+import jwt from "jsonwebtoken";
+import {StoreFront} from "../../src/storefront";
+import {Server} from "http";
+import request from "supertest";
 
 
 describe("UserHandler tests", () => {
-    let underTest: UserHandler;
+    let underTest: Server;
     const userStore: SpyObj<UserStore> = createSpyObj("UserStore", ["findAll", "findOne", "create"]);
-    const tokenSpy: SpyObj<TokenService> = createSpyObj("TokenService", ["validateToken"]);
+
+    let auth: object;
 
     beforeEach(() => {
-        underTest = new UserHandler(userStore, tokenSpy);
+        const jwtSecret = "secret";
+        process.env.JWT_SECRET = jwtSecret;
+        const productHandler: SpyObj<ProductHandler> = createSpyObj("ProductHandler", ["initRoutes"]);
+        const loginHandler: SpyObj<LoginHandler> = createSpyObj("LoginHandler", ["initRoutes"]);
+        const tokenService = new TokenService(userStore);
+        const userHandler: UserHandler = new UserHandler(userStore, tokenService)
+        const orderHandler: SpyObj<OrderHandler> = createSpyObj("OrderHandler", ["initRoutes"]);
+
+        const authHeaderValue = `Bearer: ${jwt.sign({test: "test"}, jwtSecret)}`;
+        auth = {
+            Authorization: authHeaderValue
+        };
+
+        underTest = new StoreFront(productHandler, userHandler, orderHandler, loginHandler).startServer();
+    });
+
+    afterEach(() => {
+        delete process.env.JWT_SECRET;
+        underTest.close();
     });
 
     it('should have been initialized', () => {
@@ -27,16 +53,10 @@ describe("UserHandler tests", () => {
             password: "password"
         };
 
-        const req: Request = {
-            body: u
-        } as unknown as Request;
-
         userStore.create.and.resolveTo(u);
 
-        const respSpy = createSpyObj("Response", ["status", "send"]);
-
-        await underTest.create(req, respSpy);
-        expect(respSpy.send).toHaveBeenCalledWith(u);
+        await request(underTest).post("/users").set(auth)
+            .send(u).expect(200, u);
         expect(userStore.create).toHaveBeenCalledWith(u);
     });
 
@@ -49,18 +69,10 @@ describe("UserHandler tests", () => {
             username: "username",
         };
 
-        const req: Request = {
-            params: {
-                id: id
-            }
-        } as unknown as Request;
-
         userStore.findOne.and.resolveTo(u);
 
-        const respSpy = createSpyObj("Response", ["status", "send"]);
-
-        await underTest.show(req, respSpy);
-        expect(respSpy.send).toHaveBeenCalledWith(u);
+        await request(underTest).get(`/users/${id}`).set(auth)
+            .send(u).expect(200, u);
         expect(userStore.findOne).toHaveBeenCalledWith(id);
     });
 
@@ -74,26 +86,10 @@ describe("UserHandler tests", () => {
             }
         ];
 
-        const req: Request = {} as unknown as Request;
-
         userStore.findAll.and.resolveTo(u);
 
-        const respSpy = createSpyObj("Response", ["status", "send"]);
-
-        await underTest.index(req, respSpy);
-        expect(respSpy.send).toHaveBeenCalledWith(u);
+        await request(underTest).get("/users").set(auth)
+            .send(u).expect(200, u);
         expect(userStore.findAll).toHaveBeenCalledWith();
-    });
-
-    it('should set the correct routes', () => {
-        const appSpy = createSpyObj("Application", ["get", "post"])
-        const getRouts = ["/users", "/users/:id"];
-        appSpy.get.and.callFake((url: string) => {
-            expect(getRouts).toContain(url);
-        });
-        appSpy.post.and.callFake((url: string) => {
-            expect(url).toBe("/users");
-        });
-        underTest.initRoutes(appSpy);
     });
 });

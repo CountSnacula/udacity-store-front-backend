@@ -1,19 +1,47 @@
 import {Order, OrderStatus, OrderStore, ProductOrder} from "../../src/db/models/order";
 import {OrderHandler} from "../../src/db/handler/order-handler";
-import {Application, Request, Response} from "express";
 import {TokenService} from "../../src/db/service/token-service";
+import {ProductHandler} from "../../src/db/handler/product-handler";
+import {UserHandler} from "../../src/db/handler/user-handler";
+import {Server} from "http";
+import {StoreFront} from "../../src/storefront";
+import {LoginHandler} from "../../src/db/handler/login-handler";
+import request from 'supertest';
+import {UserStore} from "../../src/db/models/user";
+import jwt from "jsonwebtoken";
 import createSpyObj = jasmine.createSpyObj;
 import SpyObj = jasmine.SpyObj;
 
 
 describe("Order Handler tests", () => {
-    let underTest: OrderHandler;
+    let underTest: Server;
     const orderSpy: SpyObj<OrderStore> = createSpyObj("OrderStore", ["findActive", "createOrder", "completeOrder"]);
-    const tokenSpy: SpyObj<TokenService> = createSpyObj("TokenService", ["validateToken"]);
+
+    let authHeaderValue;
+    let auth: object;
 
     beforeEach(() => {
-        underTest = new OrderHandler(orderSpy, tokenSpy);
+        const jwtSecret = "secret";
+        process.env.JWT_SECRET = jwtSecret;
+        const productHandler: SpyObj<ProductHandler> = createSpyObj("ProductHandler", ["initRoutes"]);
+        const userHandler: SpyObj<UserHandler> = createSpyObj("UserHandler", ["initRoutes"]);
+        const loginHandler: SpyObj<LoginHandler> = createSpyObj("LoginHandler", ["initRoutes"]);
+        const userStoreSpy: SpyObj<UserStore> = createSpyObj("UserStore", ["findAndValidate"]);
+        const tokenService = new TokenService(userStoreSpy);
+        const orderHandler: OrderHandler = new OrderHandler(orderSpy, tokenService);
 
+
+        authHeaderValue = `Bearer: ${jwt.sign({test: "test"}, jwtSecret)}`;
+        auth = {
+            Authorization: authHeaderValue
+        };
+
+        underTest = new StoreFront(productHandler, userHandler, orderHandler, loginHandler).startServer();
+    });
+
+    afterEach(() => {
+        delete process.env.JWT_SECRET;
+        underTest.close();
     });
 
     it('should have been initialized', () => {
@@ -35,20 +63,10 @@ describe("Order Handler tests", () => {
             status
         };
 
-        const req: Request = {
-            params: {
-                userId: userId
-            },
-            body: order
-        } as unknown as Request;
-
         orderSpy.createOrder.and.resolveTo(order);
 
-        const respSpy = createSpyObj("Response", ["status", "send"]);
-
-        await underTest.create(req, respSpy);
-        expect(respSpy.send).toHaveBeenCalledWith(order);
-        expect(orderSpy.createOrder).toHaveBeenCalledWith(order, userId);
+        await request(underTest).post(`/users/${userId}/orders`).set(auth)
+            .send(order).expect(200, order);
     });
 
     it('should get active order', async () => {
@@ -66,18 +84,9 @@ describe("Order Handler tests", () => {
             status
         };
 
-        const req: Request = {
-            params: {
-                userId: userId
-            }
-        } as unknown as Request;
-
         orderSpy.findActive.and.resolveTo(order);
 
-        const respSpy = createSpyObj("Response", ["status", "send"]);
-
-        await underTest.getActive(req, respSpy);
-        expect(respSpy.send).toHaveBeenCalledWith(order);
+        await request(underTest).get(`/users/${userId}/orders/active`).set(auth).expect(200, order);
         expect(orderSpy.findActive).toHaveBeenCalledWith(userId);
     });
 
@@ -96,33 +105,10 @@ describe("Order Handler tests", () => {
             status
         };
 
-        const req: Request = {
-            params: {
-                userId: userId,
-                orderId: id
-            }
-        } as unknown as Request;
-
         orderSpy.completeOrder.and.resolveTo(order);
 
-        const respSpy = createSpyObj("Response", ["status", "send"]);
-
-        await underTest.complete(req, respSpy);
-        expect(respSpy.send).toHaveBeenCalledWith(order);
+        await request(underTest).put(`/users/${userId}/orders/${id}`).set(auth)
+            .expect(200, order);
         expect(orderSpy.completeOrder).toHaveBeenCalledWith(userId, id);
-    });
-
-    it('should set the correct routes', () => {
-        const appSpy = createSpyObj("Application", ["get", "put", "post"])
-        appSpy.get.and.callFake((url: string) => {
-            expect(url).toBe("/users/:userId/orders/active");
-        });
-        appSpy.put.and.callFake((url: string) => {
-            expect(url).toBe("/users/:userId/orders/:orderId");
-        });
-        appSpy.post.and.callFake((url: string) => {
-            expect(url).toBe("/users/:userId/orders");
-        });
-        underTest.initRoutes(appSpy);
     });
 });

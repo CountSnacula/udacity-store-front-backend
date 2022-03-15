@@ -54,7 +54,7 @@ describe("Order Store tests", () => {
 
     it('should complete an active order', async () => {
         const expectedQuery = "UPDATE orders\n" +
-            "                               SET status= 'complete'\n" +
+            "                               SET status= 'completed'\n" +
             "                               WHERE id = 1 AND user_id = 2\n" +
             "                               RETURNING id, user_id as userId, status";
         const id = 1;
