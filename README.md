@@ -2,10 +2,77 @@
 
 ## Instructions
 
-### Build
+### env
 
-Building the project use `npm run build` in the project root. The resulting js files will be located in the
-folder `dist`
+The following env vars need to be present in the .env-file, as an example see the file `.example-env`.
+
+| Variable          | Description                                                     | Required value |
+|-------------------|-----------------------------------------------------------------|----------------|
+| POSTGRES_PASSWORD | The password to connect to postgres                             | postgres       |
+| POSTGRES_USER     | The user to connect to postgres                                 | postgres       |
+| POSTGRES_DB       | the database used by the project                                | store_front    |
+| POSTGRES_HOST     | The host where postgres is running                              | --             |
+| BCRYPT_PASSWORD   | The pepper used for encrypting user passwords                   | --             |
+| SALT_ROUNDS       | the number of round used for hashing the user passwords         | --             |
+| JWT_SECRET        | the secret used to signe the jwt token after a successful login | --             |
+
+### Database
+
+This project uses PostgresQL as it's database and requires a running server to connect to.
+
+#### Docker
+
+##### Installation
+
+Download and install [Docker](https://docs.docker.com/get-docker/) and verify that you can start containers and that
+docker-compose is installed.
+
+##### Setup
+
+Simply run `docker-compose up -d`. This will start a PostgresQL container and automatically configures a user, password
+and the database used by the app.  
+For this to function properly you have to add the following options to the `.env` file
+
+| Parameter name    | Description                                     | Required value |
+|-------------------|-------------------------------------------------|----------------|
+| POSTGRES_USER     | the user to connect to the database             | postgres       |
+| POSTGRES_PASSWORD | the password to connect to the database         | postgres       |
+| POSTGRES_DB       | the database used by the storefront application | store_front    |
+
+The resumption container will publish the default postgres port 5432.
+
+##### Connection
+
+To connect against the docker container use any DB-Tool you like and use `127.0.0.1` as the host and `5432` as the port.
+The user, password and database will be the values of the configuration mentioned above.
+
+#### Bare metal
+
+#### Installation
+
+Download the [installer](https://www.postgresql.org/) for your system and follow the steps shown or mentioned on the
+postgres home page.
+
+##### Setup
+
+Connect to the running PostgresQL server with the user and password you used to install the server.  
+Execute the following commands to set up the correct user/password and database:
+
+```sql
+CREATE USER postgres WITH PASSWORD 'postgres';
+CREATE DATABASE store_front;
+GRANT ALL PRIVILEGES ON DATABASE store_front TO postgres;
+```
+
+##### Connection
+
+After the user and database is created you can connect to the database using the information.  
+For the initial connection you have to use the credential you used in the installation steps.
+
+##### Connect to DB
+
+The Container will be started and excepts connection on port __5432__
+To connect to the postgres container following environment variables are important:
 
 ### Server
 
@@ -16,45 +83,47 @@ folder `dist`
 
 To start a postgres instance for this project run `docker-compose up -d` from the root directory in the project.
 
-##### Connect to DB
+#### Installing dependencies
 
-The Container will be started and excepts connection on port __5432__
-To connect to the postgres container following environment variables are important:
+Run `npm install` from the root directory of the project to install all necessary dependencies used.
 
-| Parameter name | Description |
-|----------------|-----|
-| POSTGRES_USER          | the user to connect to the database |
-| POSTGRES_PASSWORD       | the password to connect to the database |
-| POSTGRES_DB         | the database used by the storefront application |
+#### Migration
 
-##### .env
+Run `npm run migrate` to initialize the postgres server with the necessary tables. This command will also insert testing
+data.
 
-For all need variables needed for the .env-File see the example file `.example-env`. This will configure both the node
-both the app and the docker container.
+Storefront user which will be created:  
+Username: `username`  
+Password: `password`
+
+### Build
+
+Building the project use `npm run build` in the project root. The resulting js files will be located in the
+folder `dist`
 
 #### tests
 
-To run the test execute following command `npm run test`. For this to run you do not need to have configured anything prior, as the test do not require any actual database connection. All queries have been mocked.
+To run the test execute following command `npm run test`. For this to run you do not need to have configured anything
+prior, as the test do not require any actual database connection. All queries have been mocked.
 
 ##### stating
 
-run `npm install` from the project root directory to install all dependencies. Afterwards run `db-migrate up` or `npm run migrate` this will
-set up the local PostgresQL server.  
-The migration script contain initial data for `user`, `products` and `orders`.
-
 To start the service either:
 
-* build the project and run `node build/index.js`
-* `npm run start`
+* build the project useing `npm run build` and run `node build/index.js`
+* run the source code directly
+  * using `npm run start`
+  * or `npm run watch`
 
-Both options will start an express server which will listen on port 3000.
+Regardless of the option used the server will be started on your local machine on port 3000.
 
-### Endpoint
+##### Requests
 
-For the endpoint see the example [insomnia](https://insomnia.rest/) request collection `store-front-insomnia.json` or
-the HTTP archive format `store-front-insomnia.har`
+All request provided for this server is listed below.  
+An example [Insomnia](https://insomnia.rest/) collection has been provided and can be found in the file `store-front-insomnia.json`.  
+An example HTTP Archive file containing the same collection as for insomnia has been provided and can be found in `store-front-insomnia.har`
 
-#### login
+###### login
 
 Methode: POST URL: `localhost:3000/login`
 Body:
@@ -78,9 +147,7 @@ curl --request POST \
 }'
 ```
 
-#### products
-
-##### Get all products
+###### Get all products
 
 Methode: GET URL: `localhost:3000/products`
 example:
@@ -90,7 +157,7 @@ curl --request GET \
   --url http://localhost:3000/products
 ```
 
-##### Get single product
+###### Get single product
 
 Methode: GET URL: `localhost:3000/products/:id`
 example:
@@ -100,7 +167,7 @@ curl --request GET \
   --url http://localhost:3000/products/1
 ```
 
-##### create product
+###### create product
 
 Methode: POST URL: `localhost:3000/products`
 Body:
@@ -128,9 +195,7 @@ curl --request POST \
 }'
 ```
 
-#### user
-
-##### Get all users
+###### Get all users
 
 Methode: GET URL: `localhost:3000/users`
 Headers: `Authorization: Bearer: authoken from login response`
@@ -142,7 +207,7 @@ curl --request GET \
   --header 'Authorization: Bearer: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjozLCJmaXJzdG5hbWUiOiJmaXJzdE5hbWUiLCJsYXN0bmFtZSI6Imxhc3ROYW1lIiwidXNlcm5hbWUiOiJ1c2VybmFtZSJ9LCJpYXQiOjE2NDcyNzcwOTZ9.5W1QIy5E7krNDg8djDt3tMSkjE7PZIX8t51zPjgSR-c'
 ```
 
-##### Get single user
+###### Get single user
 
 Methode: GET URL: `localhost:3000/users/:id`
 Headers: `Authorization: Bearer: authoken from login response`
@@ -154,7 +219,7 @@ curl --request GET \
   --header 'Authorization: Bearer: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjozLCJmaXJzdG5hbWUiOiJmaXJzdE5hbWUiLCJsYXN0bmFtZSI6Imxhc3ROYW1lIiwidXNlcm5hbWUiOiJ1c2VybmFtZSJ9LCJpYXQiOjE2NDcyNzcwOTZ9.5W1QIy5E7krNDg8djDt3tMSkjE7PZIX8t51zPjgSR-c'
 ```
 
-##### create user
+###### create user
 
 Methode: POST URL: `localhost:3000/users`
 Headers: `Authorization: Bearer: authoken from login response`
@@ -184,9 +249,7 @@ curl --request POST \
 }'
 ```
 
-#### Order
-
-##### get active order
+###### get active order
 
 Methode: GET URL: `localhost:3000/users/1/orders/active`
 Headers: `Authorization: Bearer: authoken from login response`
@@ -198,7 +261,7 @@ curl --request GET \
   --header 'Authorization: Bearer: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjozLCJmaXJzdG5hbWUiOiJmaXJzdE5hbWUiLCJsYXN0bmFtZSI6Imxhc3ROYW1lIiwidXNlcm5hbWUiOiJ1c2VybmFtZSJ9LCJpYXQiOjE2NDcyNzcwOTZ9.5W1QIy5E7krNDg8djDt3tMSkjE7PZIX8t51zPjgSR-c'
 ```
 
-##### complete active order
+###### complete active order
 
 Methode: PUT URL: `localhost:3000/users/1/orders/1`
 Headers: `Authorization: Bearer: authoken from login response`
@@ -210,7 +273,7 @@ curl --request PUT \
   --header 'Authorization: Bearer: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjozLCJmaXJzdG5hbWUiOiJmaXJzdE5hbWUiLCJsYXN0bmFtZSI6Imxhc3ROYW1lIiwidXNlcm5hbWUiOiJ1c2VybmFtZSJ9LCJpYXQiOjE2NDcyNzcwOTZ9.5W1QIy5E7krNDg8djDt3tMSkjE7PZIX8t51zPjgSR-c'
 ```
 
-##### create new order
+###### create new order
 
 Methode: POST URL: `localhost:3000/users/1/orders`
 Headers: `Authorization: Bearer: authoken from login response`
@@ -246,10 +309,7 @@ curl --request POST \
 }'
 ```
 
-## Getting Started
-
-This repo contains a basic Node and Express app to get you started in constructing an API. To get started, clone this
-repo and run `yarn` in your terminal at the project root.
+___________________
 
 ## Required Technologies
 
